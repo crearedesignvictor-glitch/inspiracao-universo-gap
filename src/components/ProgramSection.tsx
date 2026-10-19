@@ -7,11 +7,11 @@ interface ProgramSectionProps {
 }
 
 export const ProgramSection: React.FC<ProgramSectionProps> = ({ onSelectShow }) => {
-  const [selectedDate, setSelectedDate] = useState<'14' | '27'>('14');
+  const [selectedDate, setSelectedDate] = useState<'all' | '14' | '27'>('all');
 
   return (
     <section className="program" id="programacao">
-      <div className="section-head reveal">
+      <div className="section-head reveal visible">
         <div>
           <span className="eyebrow">Escolha sua inspiração</span>
           <h2>
@@ -28,6 +28,15 @@ export const ProgramSection: React.FC<ProgramSectionProps> = ({ onSelectShow }) 
 
       <div aria-label="Filtrar por data" className="filters" role="group">
         <button
+          type="button"
+          aria-pressed={selectedDate === 'all'}
+          className={`filter ${selectedDate === 'all' ? 'active' : ''}`}
+          onClick={() => setSelectedDate('all')}
+        >
+          Todas as sessões
+        </button>
+        <button
+          type="button"
           aria-pressed={selectedDate === '14'}
           className={`filter ${selectedDate === '14' ? 'active' : ''}`}
           onClick={() => setSelectedDate('14')}
@@ -35,6 +44,7 @@ export const ProgramSection: React.FC<ProgramSectionProps> = ({ onSelectShow }) 
           14 de novembro
         </button>
         <button
+          type="button"
           aria-pressed={selectedDate === '27'}
           className={`filter ${selectedDate === '27' ? 'active' : ''}`}
           onClick={() => setSelectedDate('27')}
@@ -45,13 +55,17 @@ export const ProgramSection: React.FC<ProgramSectionProps> = ({ onSelectShow }) 
 
       <div className="grid">
         {SHOWS.map((show) => {
-          const isHidden = show.dateKey !== selectedDate;
-          if (isHidden) return null;
-
+          const isHidden = selectedDate !== 'all' && show.dateKey !== selectedDate;
           const ticketUrl = `https://wa.me/${WHATSAPP_PHONE}?text=${encodeURIComponent(show.ticketMessage)}`;
 
           return (
-            <article key={show.id} className="show-card reveal" data-date={show.dateKey}>
+            <article
+              key={show.id}
+              className="show-card reveal visible"
+              data-date={show.dateKey}
+              hidden={isHidden}
+              style={isHidden ? { display: 'none' } : undefined}
+            >
               <button
                 type="button"
                 aria-label={`Conhecer ${show.person}`}
@@ -76,7 +90,7 @@ export const ProgramSection: React.FC<ProgramSectionProps> = ({ onSelectShow }) 
                   className="poster-photo"
                   src={show.posterImage}
                   alt={show.posterAlt}
-                  loading="lazy"
+                  loading="eager"
                 />
                 <div className="poster-foot">
                   <span>InspirAÇÃO</span>

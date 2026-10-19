@@ -16,7 +16,7 @@ export const HERO_SLIDES: HeroSlide[] = [
     description: 'Tatiana Sampaio às 17h e Steve Jobs às 19h30. Dia 14 de novembro, no Teatro Usina da Paz.',
   },
   {
-    titleHtml: 'Descobertas e raízes.<br><em>Histórias que ficam.</em>',
+    titleHtml: 'Descobertas e raízes: Histórias<br><em>que ficam.</em>',
     description: 'Marie Curie às 17h e Leonildo Borges Rocha às 19h30. Dia 27 de novembro, no Teatro Municipal Eduardo Abdelnor.',
   },
 ];
