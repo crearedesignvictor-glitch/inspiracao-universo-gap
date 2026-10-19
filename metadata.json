@@ -1,0 +1,6 @@
+{
+  "name": "InspirAÇÃO — Universo GAP",
+  "description": "Quatro histórias, dois encontros com a imaginação. Programação teatral InspirAÇÃO da Universo GAP em Marabá.",
+  "permissions": [],
+  "capabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
