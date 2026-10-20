@@ -20,9 +20,9 @@ export const Hero: React.FC = () => {
   return (
     <section className="cinema-hero" id="inicio" aria-label="InspirAÇÃO, mostra de teatro">
       <picture className="cast-background">
-        <source media="(max-width:700px)" srcSet="/assets/cast-mobile.webp" />
+        <source media="(max-width:700px)" srcSet="/assets/aistudio/MOBILE__849201a6.png" />
         <img
-          src="/assets/cast-desktop.webp"
+          src="/assets/aistudio/WEB_a10845a4.png"
           alt="As quatro crianças caracterizadas para os espetáculos, juntas no teatro"
           fetchPriority="high"
         />

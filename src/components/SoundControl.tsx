@@ -1,91 +1,181 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 
+// YouTube Video ID for "ANAVITÓRIA, Rita Lee - Amarelo, azul e branco"
+const YOUTUBE_VIDEO_ID = 'GtvS897PiyQ';
+
+declare global {
+  interface Window {
+    onYouTubeIframeAPIReady?: () => void;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    YT?: any;
+  }
+}
+
 export const SoundControl: React.FC = () => {
   const [isPlaying, setIsPlaying] = useState(false);
-  const [label, setLabel] = useState('Ouvir trilha');
-  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const [label, setLabel] = useState('Ouvir música');
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const playerRef = useRef<any>(null);
   const userPausedRef = useRef<boolean>(false);
+  const isReadyRef = useRef<boolean>(false);
+  const audioFallbackRef = useRef<HTMLAudioElement | null>(null);
 
-  const startPlayback = useCallback(async () => {
-    const audio = audioRef.current;
-    if (!audio || userPausedRef.current) return;
+  const playSound = useCallback(() => {
+    userPausedRef.current = false;
+    if (playerRef.current && isReadyRef.current && typeof playerRef.current.playVideo === 'function') {
+      try {
+        playerRef.current.unMute();
+        playerRef.current.setVolume(85);
+        playerRef.current.playVideo();
+        setIsPlaying(true);
+        setLabel('Pausar música');
+        return;
+      } catch (err) {
+        console.warn('YouTube playVideo error, falling back:', err);
+      }
+    }
 
-    try {
-      audio.volume = 0.85;
-      await audio.play();
-      setIsPlaying(true);
-      setLabel('Pausar trilha');
-    } catch {
-      // Browser autoplay policy prevented audio before user interaction
-      setIsPlaying(false);
-      setLabel('Ouvir trilha');
+    if (audioFallbackRef.current) {
+      audioFallbackRef.current.volume = 0.85;
+      audioFallbackRef.current.play().then(() => {
+        setIsPlaying(true);
+        setLabel('Pausar música');
+      }).catch(() => {});
     }
   }, []);
 
-  const pausePlayback = useCallback(() => {
-    const audio = audioRef.current;
-    if (audio) {
-      audio.pause();
+  const pauseSound = useCallback(() => {
+    userPausedRef.current = true;
+    if (playerRef.current && isReadyRef.current && typeof playerRef.current.pauseVideo === 'function') {
+      try {
+        playerRef.current.pauseVideo();
+      } catch (err) {
+        console.warn('YouTube pauseVideo error:', err);
+      }
+    }
+    if (audioFallbackRef.current) {
+      audioFallbackRef.current.pause();
     }
     setIsPlaying(false);
-    setLabel('Ouvir trilha');
+    setLabel('Ouvir música');
   }, []);
 
   const toggleSound = (e?: React.MouseEvent) => {
     if (e) {
       e.stopPropagation();
     }
-    const audio = audioRef.current;
-    if (!audio) return;
-
     if (isPlaying) {
-      userPausedRef.current = true;
-      pausePlayback();
+      pauseSound();
     } else {
-      userPausedRef.current = false;
-      startPlayback();
+      playSound();
     }
   };
 
   useEffect(() => {
-    const audio = audioRef.current;
-    if (!audio) return;
-
-    audio.loop = true;
-    audio.volume = 0.85;
-
-    // 1. Try to play immediately as soon as page opens
-    startPlayback();
-
-    // 2. Resume immediately upon first user interaction anywhere on the page
-    const handleGesture = () => {
-      if (userPausedRef.current) return;
-      if (audio.paused) {
-        startPlayback()
-          .then(() => {
-            ['click', 'pointerdown', 'touchstart', 'keydown'].forEach((evt) => {
-              window.removeEventListener(evt, handleGesture);
-            });
-          })
-          .catch(() => {});
+    // 1. Load YouTube IFrame API script
+    const loadYouTubeApi = () => {
+      if (!window.YT) {
+        const existingScript = document.querySelector('script[src*="youtube.com/iframe_api"]');
+        if (!existingScript) {
+          const tag = document.createElement('script');
+          tag.src = 'https://www.youtube.com/iframe_api';
+          document.head.appendChild(tag);
+        }
       }
     };
 
-    ['click', 'pointerdown', 'touchstart', 'keydown'].forEach((evt) => {
+    // 2. Initialize player once API is ready
+    const createPlayer = () => {
+      if (!window.YT || !window.YT.Player) return;
+      if (playerRef.current) return;
+
+      try {
+        playerRef.current = new window.YT.Player('youtube-audio-player', {
+          videoId: YOUTUBE_VIDEO_ID,
+          playerVars: {
+            autoplay: 1,
+            loop: 1,
+            playlist: YOUTUBE_VIDEO_ID,
+            controls: 0,
+            disablekb: 1,
+            fs: 0,
+            modestbranding: 1,
+            playsinline: 1,
+            rel: 0,
+            enablejsapi: 1,
+          },
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          events: {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            onReady: (event: any) => {
+              isReadyRef.current = true;
+              event.target.setVolume(85);
+              if (!userPausedRef.current) {
+                event.target.playVideo();
+              }
+            },
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            onStateChange: (event: any) => {
+              // 1 = PLAYING, 2 = PAUSED, 0 = ENDED
+              if (event.data === 1) {
+                setIsPlaying(true);
+                setLabel('Pausar música');
+              } else if (event.data === 2 || event.data === 0) {
+                setIsPlaying(false);
+                setLabel('Ouvir música');
+              }
+            },
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            onError: (err: any) => {
+              console.warn('YouTube Player error, using audio fallback:', err);
+              // Fallback to audio element if video playback fails
+              if (!userPausedRef.current && audioFallbackRef.current) {
+                audioFallbackRef.current.play().catch(() => {});
+              }
+            },
+          },
+        });
+      } catch (err) {
+        console.warn('Failed to construct YT.Player:', err);
+      }
+    };
+
+    if (window.YT && window.YT.Player) {
+      createPlayer();
+    } else {
+      window.onYouTubeIframeAPIReady = () => {
+        createPlayer();
+      };
+      loadYouTubeApi();
+    }
+
+    // 3. User interaction gesture unlocker (ensures autoplay on mobile or strict browser policies)
+    const handleGesture = () => {
+      if (userPausedRef.current) return;
+      playSound();
+    };
+
+    const gestureEvents = ['click', 'pointerdown', 'touchstart', 'keydown'];
+    gestureEvents.forEach((evt) => {
       window.addEventListener(evt, handleGesture, { passive: true });
     });
 
-    // 3. Tab visibility management
+    // 4. Tab visibility change handler
     const handleVisibilityChange = () => {
       if (document.hidden) {
-        if (!audio.paused) {
-          audio.pause();
+        if (isPlaying) {
+          if (playerRef.current && isReadyRef.current && typeof playerRef.current.pauseVideo === 'function') {
+            playerRef.current.pauseVideo();
+          }
+          if (audioFallbackRef.current) {
+            audioFallbackRef.current.pause();
+          }
           setIsPlaying(false);
-          setLabel('Ouvir trilha');
+          setLabel('Ouvir música');
         }
       } else {
         if (!userPausedRef.current) {
-          startPlayback();
+          playSound();
         }
       }
     };
@@ -93,22 +183,47 @@ export const SoundControl: React.FC = () => {
     document.addEventListener('visibilitychange', handleVisibilityChange);
 
     return () => {
-      ['click', 'pointerdown', 'touchstart', 'keydown'].forEach((evt) => {
+      gestureEvents.forEach((evt) => {
         window.removeEventListener(evt, handleGesture);
       });
       document.removeEventListener('visibilitychange', handleVisibilityChange);
+      if (playerRef.current && typeof playerRef.current.destroy === 'function') {
+        playerRef.current.destroy();
+        playerRef.current = null;
+      }
     };
-  }, [startPlayback]);
+  }, [playSound, isPlaying]);
 
   return (
     <>
+      {/* Hidden YouTube player container */}
+      <div
+        id="youtube-player-container"
+        aria-hidden="true"
+        tabIndex={-1}
+        style={{
+          position: 'fixed',
+          bottom: '-300px',
+          right: '-300px',
+          width: '200px',
+          height: '200px',
+          opacity: 0.001,
+          pointerEvents: 'none',
+          zIndex: -99,
+        }}
+      >
+        <div id="youtube-audio-player" />
+      </div>
+
+      {/* Fallback audio element */}
       <audio
-        ref={audioRef}
+        ref={audioFallbackRef}
         src="/assets/soundtrack.wav"
-        preload="auto"
+        preload="none"
         loop
         playsInline
       />
+
       <button
         aria-label={isPlaying ? 'Pausar trilha instrumental' : 'Ouvir trilha instrumental'}
         aria-pressed={isPlaying}
@@ -116,6 +231,7 @@ export const SoundControl: React.FC = () => {
         id="sound-toggle"
         type="button"
         onClick={toggleSound}
+        title="Amarelo, azul e branco — ANAVITÓRIA e Rita Lee"
       >
         <svg
           aria-hidden="true"

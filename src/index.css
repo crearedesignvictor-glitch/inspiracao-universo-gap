@@ -5,10 +5,10 @@
 
 /* Refined marquee and event footer. */
 .hero-switcher span{margin-left:0}
-.ribbon{padding:22px 0;background:linear-gradient(100deg,#11243b,#101723 55%,#231523);border-color:#7db9f125}
-.ribbon-inner{gap:0;animation:marquee 27s linear infinite reverse;font-family:Nunito,sans-serif;font-weight:600;font-size:17px;letter-spacing:2px;color:#d2e7fa;font-style:normal}
+.ribbon{padding:22px 0;background:linear-gradient(100deg,#b31529 0%,#ee2842 50%,#b31529 100%);border-color:#ff4760;border-block:1px solid #ff4760}
+.ribbon-inner{gap:0;animation:marquee 27s linear infinite reverse;font-family:Nunito,sans-serif;font-weight:700;font-size:17px;letter-spacing:2px;color:#ffffff;font-style:normal}
 .ribbon-inner>span{display:block;flex-shrink:0;padding-right:34px;transform:none}
-.ribbon b{display:inline-block;margin:0 18px;color:#f05a6d;animation:ribbon-star 8s linear infinite}
+.ribbon b{display:inline-block;margin:0 18px;color:#ffe6ea;animation:ribbon-star 8s linear infinite}
 @keyframes ribbon-star{to{transform:rotate(360deg)}}
 footer.site-footer{display:block;padding:58px 6% 25px;background:linear-gradient(135deg,#111d30,#0a0e16 65%);border-top:1px solid #7db9f126;color:#a8b6ca;font-size:13px}
 .footer-grid{max-width:1116px;margin:auto;display:grid;grid-template-columns:1.2fr .8fr 1fr;gap:55px}
@@ -43,7 +43,7 @@ header{background:linear-gradient(#080808e8,transparent)}
 .hero-content h1 em{color:var(--blue)}
 .filters,.show-card{background:#151515}
 .about-tags span{border-color:#ff526840;color:#f0c8ce}
-.ribbon{border-color:#ff526825}.ribbon-inner{color:#eeeeef}
+.ribbon{border-color:#ff4760;background:linear-gradient(100deg,#b31529 0%,#ee2842 50%,#b31529 100%)}.ribbon-inner{color:#ffffff}
 footer.site-footer{border-top-color:#ff526826;color:#b9b9c0}
 .sound-control{background:#141414ed}.grid{scrollbar-color:#c8384d transparent}
 .text-link{color:#efc9cf}.show-info .show-venue,.purchase-steps{color:#d8d8de}
